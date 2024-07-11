@@ -6,7 +6,6 @@ import com.gmail.sneakdevs.diamondeconomy.sql.DatabaseManager;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -27,7 +26,7 @@ public class SendCommand {
                                                 })));
     }
 
-    public static int sendCommand(CommandContext<CommandSourceStack> ctx, ServerPlayer player, ServerPlayer player1, int amount) throws CommandSyntaxException {
+    public static int sendCommand(CommandContext<CommandSourceStack> ctx, ServerPlayer player, ServerPlayer player1, int amount) {
         DatabaseManager dm = DiamondUtils.getDatabaseManager();
         long newValue = dm.getBalanceFromUUID(player.getStringUUID()) + amount;
         if (newValue < Integer.MAX_VALUE && dm.changeBalance(player1.getStringUUID(), -amount)) {
