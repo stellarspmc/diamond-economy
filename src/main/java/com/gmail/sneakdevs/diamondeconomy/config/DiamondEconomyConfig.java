@@ -6,11 +6,10 @@ import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
 import me.shedaniel.cloth.clothconfig.shadowed.blue.endless.jankson.Comment;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Component;
 
 @Config(name = DiamondEconomy.MODID)
 public class DiamondEconomyConfig implements ConfigData {
@@ -21,8 +20,18 @@ public class DiamondEconomyConfig implements ConfigData {
     @Comment("Values of each currency in the same order, decimals not allowed (must be in ascending order unless greedyWithdraw is disabled)")
     public int[] currencyValues = {1,9};
 
-    @Comment("Where the diamondeconomy.sqlite file is located (ex: \"C:/Users/example/Desktop/server/world/diamondeconomy.sqlite\")")
+    @Comment("Type of Database to use (sqlite or mysql)")
+    public String databaseType = "sqlite";
+
+    @Comment("Where the diamondeconomy.sqlite file is located (null to use default location, only used if databaseType is sqlite) (ex: \"C:/Users/example/Desktop/server/world/diamondeconomy.sqlite\")")
     public String fileLocation = null;
+
+    @Comment("MySQL database credentials (only used if databaseType is mysql)")
+    public String mysqlHost = "localhost";
+    public int mysqlPort = 3306;
+    public String mysqlUsername = "root";
+    public String mysqlPassword = "password";
+    public String mysqlDatabase = "diamondeconomy";
 
     @Comment("Name of the base command (null to disable base command)")
     public String commandName = "diamonds";
@@ -56,16 +65,6 @@ public class DiamondEconomyConfig implements ConfigData {
 
     @Comment("Permission level (1-4) of the op commands in diamond economy. Set to 2 to allow command blocks to use these commands.")
     public int opCommandsPermissionLevel = 4;
-
-    @Comment("Type of Database to use (sqlite or mysql)")
-    public String databaseType = "sqlite";
-
-    @Comment("MySQL database credentials (only used if databaseType is mysql)")
-    public String mysqlHost = "localhost";
-    public int mysqlPort = 3306;
-    public String mysqlUsername = "root";
-    public String mysqlPassword = "password";
-    public String mysqlDatabase = "diamondeconomy";
 
     public static Item getCurrency(int num) {
         return BuiltInRegistries.ITEM.get(ResourceLocation.tryParse(DiamondEconomyConfig.getInstance().currencies[num]));
