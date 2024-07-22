@@ -2,6 +2,7 @@ package com.gmail.sneakdevs.diamondeconomy;
 
 import com.gmail.sneakdevs.diamondeconomy.command.DiamondEconomyCommands;
 import com.gmail.sneakdevs.diamondeconomy.config.DiamondEconomyConfig;
+import com.gmail.sneakdevs.diamondeconomy.integration.DiamondEconomyProvider;
 import com.gmail.sneakdevs.diamondeconomy.sql.SQLiteDatabaseManager;
 import eu.pb4.placeholders.api.PlaceholderResult;
 import eu.pb4.placeholders.api.Placeholders;
@@ -64,5 +65,6 @@ public class DiamondEconomy implements ModInitializer {
         registerPlaceholders();
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> DiamondEconomyCommands.register(dispatcher));
         ServerLifecycleEvents.SERVER_STARTING.register(DiamondEconomy::initServer);
+        DiamondEconomyProvider.init();
     }
 }
