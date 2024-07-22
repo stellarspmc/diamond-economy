@@ -7,6 +7,7 @@ import eu.pb4.common.economy.api.EconomyProvider;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public class DiamondCurrency implements EconomyCurrency {
     public static final DiamondCurrency INSTANCE = new DiamondCurrency();
@@ -45,6 +46,6 @@ public class DiamondCurrency implements EconomyCurrency {
 
     @Override
     public ItemStack icon() {
-        return DiamondEconomyConfig.getCurrency(0).getDefaultInstance();
+        return Items.DIAMOND.getDefaultInstance();
     }
 }

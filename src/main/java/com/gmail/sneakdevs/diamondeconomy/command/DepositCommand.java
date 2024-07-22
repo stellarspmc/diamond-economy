@@ -7,6 +7,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -17,16 +18,16 @@ import net.minecraft.network.chat.Style;
 
 public class DepositCommand {
 
-    private static MutableComponent MAX_BALANCE_ERROR = Component.literal("Error during deposit. The balance limit of you account might be exceeded");
+    private static final MutableComponent MAX_BALANCE_ERROR = Component.literal("ERR: Transaction failed.").withStyle(ChatFormatting.DARK_RED);
     public static LiteralArgumentBuilder<CommandSourceStack> buildCommand(){
-        return Commands.literal(DiamondEconomyConfig.getInstance().depositCommandName)
+        return Commands.literal("deposit")
                 .executes(DepositCommand::depositHandCommand)
                 .then(Commands.literal("all").executes(DepositCommand::depositAllCommand)
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1))
-                        .executes(ctx -> {
-                            final int n = IntegerArgumentType.getInteger(ctx, "amount");
-                            return depositAllCommand(ctx, n);
-                        }))
+                                .executes(ctx -> {
+                                    final int n = IntegerArgumentType.getInteger(ctx, "amount");
+                                    return depositAllCommand(ctx, n);
+                                }))
                 );
     }
 
@@ -35,16 +36,15 @@ public class DepositCommand {
         DatabaseManager dm = DiamondUtils.getDatabaseManager();
         int currencyCount = 0;
         for (int i = DiamondEconomyConfig.getCurrencyValues().length - 1; i >= 0; i--) {
-            int currencyMultiplier = DiamondEconomyConfig.getCurrencyValues()[i];
-            if (n != -1 && (currencyCount + currencyMultiplier) > n)
-                break; // maximal deposit reached
+            double currencyMultiplier = DiamondEconomyConfig.getRandomizedCurrencyValue(player, i);
+            if (n != -1 && (currencyCount + currencyMultiplier) > n) break; // maximal deposit reached
             for (int j = 0; j < player.getInventory().getContainerSize(); j++) {
                 if (player.getInventory().getItem(j).getItem().equals(DiamondEconomyConfig.getCurrency(i))) {
                     int takeAmount = player.getInventory().getItem(j).getCount();
                     if (n != -1)// if there is a max deposit, reduce takeAmount if necessary
-                        takeAmount = Math.min(takeAmount,  (n - currencyCount) / currencyMultiplier);
+                        takeAmount = (int) Math.min(takeAmount,  (n - currencyCount) / currencyMultiplier);
                     if (takeAmount > 0) {
-                        currencyCount += takeAmount * currencyMultiplier;
+                        currencyCount += (int) (takeAmount * currencyMultiplier);
                         player.getInventory().removeItem(j, takeAmount);
                     }
                 }
@@ -53,11 +53,11 @@ public class DepositCommand {
         if (dm.changeBalance(player.getStringUUID(), currencyCount)) {
             int finalCurrencyCount = currencyCount;
             ctx.getSource().sendSuccess(() ->
-                            Component.empty()
-                                    .append("Added ")
+                            Component.literal("ECO: ").withStyle(ChatFormatting.GREEN)
+                                    .append(Component.literal("Added ").withStyle(ChatFormatting.GOLD))
                                     .append(DiamondEconomyConfig.currencyToLiteral(finalCurrencyCount))
-                                    .append(" to your account")
-            ,false);
+                                    .append(Component.literal(" to your account.").withStyle(ChatFormatting.GOLD))
+                    ,false);
             return 1;
         } else {
             DiamondUtils.dropItem(currencyCount, player);
@@ -78,33 +78,28 @@ public class DepositCommand {
         // Find out which currency item is in Hand
         int i;
         for (i = DiamondEconomyConfig.getCurrencyValues().length - 1; i >= 0; i--) {
-            if (hand.getItem().equals(DiamondEconomyConfig.getCurrency(i))) {
-                break;
-            }
+            if (hand.getItem().equals(DiamondEconomyConfig.getCurrency(i))) break;
         }
         if (hand.isEmpty() || i == -1) {
             // Hand hold no currency item
             ctx.getSource().sendFailure(
-                Component.empty()
-                        .append("Put a currency item in your hand or use the ")
-                        .append(Component.literal(DiamondEconomyConfig.getInstance().depositCommandName + " all [amount] ")
-                                        .withStyle(Style.EMPTY.withItalic(true)))
-                        .append("command.")
+                    Component.literal("ERR: Hold a currency item in your hand or use the ").withStyle(ChatFormatting.DARK_RED)
+                            .append(Component.literal("deposit all [amount] ").withStyle(ChatFormatting.GOLD).withStyle(Style.EMPTY.withItalic(true)))
+                            .append(Component.literal("command.").withStyle(ChatFormatting.DARK_RED))
             );
             return -1;
         }
 
         // add balance to account
-        final int currencyCount = hand.getCount() * DiamondEconomyConfig.getCurrencyValues()[i];
+        final int currencyCount = hand.getCount() * DiamondEconomyConfig.getRandomizedCurrencyValue(player, i);
         if (dm.changeBalance(player.getStringUUID(), currencyCount)) {
             ctx.getSource().sendSuccess(() ->
-                    Component.empty()
-                            .append("Added ")
+                    Component.literal("ECO: ").withStyle(ChatFormatting.GREEN)
+                            .append(Component.literal("Added ").withStyle(ChatFormatting.GOLD))
                             .append(DiamondEconomyConfig.currencyToLiteral(currencyCount))
-                            .append(" to your account")
-            , false);
+                            .append(Component.literal(" to your account.").withStyle(ChatFormatting.GOLD)), false);
             player.getInventory().removeFromSelected(true); // remove whole stack
-            return currencyCount;
+            return 1;
         } else {
             ctx.getSource().sendFailure(MAX_BALANCE_ERROR);
             return -1;

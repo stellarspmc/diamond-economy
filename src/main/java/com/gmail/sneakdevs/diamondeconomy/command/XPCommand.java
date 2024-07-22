@@ -16,7 +16,7 @@ public class XPCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> buildCommand() {
         return Commands.literal("convertxp")
                 .then(
-                        Commands.argument("money", IntegerArgumentType.integer(1))
+                        Commands.argument("amount", IntegerArgumentType.integer(1))
                                 .executes(e -> {
                                     int amount = IntegerArgumentType.getInteger(e, "amount");
                                     return convertToXp(e, amount);
@@ -33,7 +33,7 @@ public class XPCommand {
                     .append(Component.literal("You have converted ").withStyle(ChatFormatting.GOLD))
                     .append(Component.literal("$" + amount).withStyle(ChatFormatting.RED))
                     .append(Component.literal(".").withStyle(ChatFormatting.GOLD)), false);
-        } else ctx.getSource().sendSuccess(() -> Component.literal("ERR: You have less than $" + amount).withStyle(ChatFormatting.DARK_RED), false);
+        } else ctx.getSource().sendFailure(Component.literal("ERR: You have less than $" + amount).withStyle(ChatFormatting.DARK_RED));
         return 1;
     }
 }

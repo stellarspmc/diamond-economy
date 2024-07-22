@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ServerPlayer.class)
 public class ServerPlayerMixin {
     @Inject(method = "tick", at = @At("TAIL"))
-    private void tickMixin(CallbackInfo ci) {
+    private void tick(CallbackInfo ci) {
         int playTime = ((ServerPlayer)(Object)this).getStats().getValue(Stats.CUSTOM.get(Stats.PLAY_TIME));
-        if (playTime > 0 && playTime % (900 * 20) == 0) DiamondUtils.getDatabaseManager().changeBalance(((ServerPlayer)(Object)this).getStringUUID(), 1);
+        if (playTime > 0 && playTime % 18000 == 0) DiamondUtils.getDatabaseManager().changeBalance(((ServerPlayer)(Object)this).getStringUUID(), 1);
     }
 }
