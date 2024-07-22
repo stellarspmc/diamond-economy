@@ -12,12 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ServerPlayer.class)
 public class ServerPlayerMixin {
     @Inject(method = "tick", at = @At("TAIL"))
-    private void diamondeconomy_tickMixin(CallbackInfo ci) {
-        if (DiamondEconomyConfig.getInstance().moneyAddAmount != 0 && DiamondEconomyConfig.getInstance().moneyAddTimer > 0) {
-            int playTime = ((ServerPlayer)(Object)this).getStats().getValue(Stats.CUSTOM.get(Stats.PLAY_TIME));
-            if (playTime > 0 && playTime % (DiamondEconomyConfig.getInstance().moneyAddTimer * 20) == 0) {
-                DiamondUtils.getDatabaseManager().changeBalance(((ServerPlayer)(Object)this).getStringUUID(), DiamondEconomyConfig.getInstance().moneyAddAmount);
-            }
-        }
+    private void tickMixin(CallbackInfo ci) {
+        int playTime = ((ServerPlayer)(Object)this).getStats().getValue(Stats.CUSTOM.get(Stats.PLAY_TIME));
+        if (playTime > 0 && playTime % (900 * 20) == 0) DiamondUtils.getDatabaseManager().changeBalance(((ServerPlayer)(Object)this).getStringUUID(), 1);
     }
 }

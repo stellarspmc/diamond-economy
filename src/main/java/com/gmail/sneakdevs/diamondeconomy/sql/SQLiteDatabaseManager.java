@@ -1,7 +1,6 @@
 package com.gmail.sneakdevs.diamondeconomy.sql;
 
 import com.gmail.sneakdevs.diamondeconomy.DiamondEconomy;
-import com.gmail.sneakdevs.diamondeconomy.config.DiamondEconomyConfig;
 
 import java.io.File;
 import java.sql.*;
@@ -12,9 +11,8 @@ public class SQLiteDatabaseManager implements DatabaseManager {
     public static void createNewDatabase(File file) {
         url = "jdbc:sqlite:" + file.getPath().replace('\\', '/');
 
-        Connection conn = null;
         try {
-            conn = DriverManager.getConnection(url);
+            DriverManager.getConnection(url);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
@@ -48,7 +46,7 @@ public class SQLiteDatabaseManager implements DatabaseManager {
         try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)){
             pstmt.setString(1, uuid);
             pstmt.setString(2, name);
-            pstmt.setInt(3, DiamondEconomyConfig.getInstance().startingMoney);
+            pstmt.setInt(3, 0);
             pstmt.executeUpdate();
         } catch (SQLException e) {
             updateName(uuid, name);
@@ -116,20 +114,18 @@ public class SQLiteDatabaseManager implements DatabaseManager {
         return -1;
     }
 
-    public boolean setBalance(String uuid, int money) {
+    public void setBalance(String uuid, int money) {
         String sql = "UPDATE diamonds SET money = ? WHERE uuid = ?";
 
         try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             if (money >= 0 && money < Integer.MAX_VALUE) {
-                pstmt.setInt(1, money);
+                pstmt.setDouble(1, money);
                 pstmt.setString(2, uuid);
                 pstmt.executeUpdate();
-                return true;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return false;
     }
 
     public void setAllBalance(int money) {
@@ -137,7 +133,7 @@ public class SQLiteDatabaseManager implements DatabaseManager {
 
         try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             if (money >= 0 && money < Integer.MAX_VALUE) {
-                pstmt.setInt(1, money);
+                pstmt.setDouble(1, money);
                 pstmt.executeUpdate();
             }
         } catch (SQLException e) {
@@ -151,7 +147,7 @@ public class SQLiteDatabaseManager implements DatabaseManager {
         try (Connection conn = this.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             int bal = getBalanceFromUUID(uuid);
             if (bal + money >= 0 && bal + money < Integer.MAX_VALUE) {
-                pstmt.setInt(1, bal + money);
+                pstmt.setDouble(1, bal + money);
                 pstmt.setString(2, uuid);
                 pstmt.executeUpdate();
                 return true;
@@ -175,28 +171,19 @@ public class SQLiteDatabaseManager implements DatabaseManager {
     public String top(String uuid, int page){
         String sql = "SELECT uuid, name, money FROM diamonds ORDER BY money DESC";
         String rankings = "";
-        int i = 0;
         int playerRank = 0;
         int repeats = 0;
 
         try (Connection conn = this.connect(); Statement stmt  = conn.createStatement(); ResultSet rs    = stmt.executeQuery(sql)){
             while (rs.next() && (repeats < 10 || playerRank == 0)) {
-                if (repeats / 10 + 1 == page) {
-                    rankings = rankings.concat(rs.getRow() + ") " + rs.getString("name") + ": $" + rs.getInt("money") + "\n");
-                    i++;
-                }
+                if (repeats / 10 + 1 == page) rankings = rankings.concat(rs.getRow() + ". " + rs.getString("name") + ": $" + rs.getInt("money") + "\n");
                 repeats++;
-                if (uuid.equals(rs.getString("uuid"))) {
-                    playerRank = repeats;
-                }
-            }
-            if (i < 10) {
-                rankings = rankings.concat("---End--- \n");
+                if (uuid.equals(rs.getString("uuid"))) playerRank = repeats;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return rankings.concat("Your rank is: " + playerRank);
+        return rankings;
     }
 
     public String rank(int rank){
@@ -205,9 +192,7 @@ public class SQLiteDatabaseManager implements DatabaseManager {
         try (Connection conn = this.connect(); Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql)){
             while (rs.next() ) {
                 repeats++;
-                if (repeats == rank) {
-                    return rs.getString("name");
-                }
+                if (repeats == rank) return rs.getString("name");
             }
         } catch (SQLException e) {
             e.printStackTrace();

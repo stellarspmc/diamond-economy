@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "com.gmail.sneakdevs.diamondeconomy.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_21",
   "mixins": [
     "PlayerListMixin_DiamondEconomy",
     "ServerPlayerMixin"

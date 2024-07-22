@@ -1,11 +1,11 @@
 package com.gmail.sneakdevs.diamondeconomy.command;
 
 import com.gmail.sneakdevs.diamondeconomy.DiamondUtils;
-import com.gmail.sneakdevs.diamondeconomy.config.DiamondEconomyConfig;
 import com.gmail.sneakdevs.diamondeconomy.sql.DatabaseManager;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
@@ -14,7 +14,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 public class SendCommand {
     public static LiteralArgumentBuilder<CommandSourceStack> buildCommand(){
-        return Commands.literal(DiamondEconomyConfig.getInstance().sendCommandName)
+        return Commands.literal("send")
                 .then(
                         Commands.argument("player", EntityArgument.player())
                                 .then(
@@ -31,11 +31,19 @@ public class SendCommand {
         long newValue = dm.getBalanceFromUUID(player.getStringUUID()) + amount;
         if (newValue < Integer.MAX_VALUE && dm.changeBalance(player1.getStringUUID(), -amount)) {
             dm.changeBalance(player.getStringUUID(), amount);
-            player.displayClientMessage(Component.literal("You received $" + amount + " from " + player1.getName().getString()), false);
-            ctx.getSource().sendSuccess(() -> Component.literal("Sent $" + amount + " to " + player.getName().getString()), false);
-        } else {
-            ctx.getSource().sendSuccess(() -> Component.literal("Failed because that would go over the max value"), false);
-        }
+            player.displayClientMessage(Component.literal("ECO: ").withStyle(ChatFormatting.GREEN)
+                    .append(Component.literal("You received ").withStyle(ChatFormatting.GOLD))
+                    .append(Component.literal("$" + amount).withStyle(ChatFormatting.RED))
+                    .append(Component.literal(" from ").withStyle(ChatFormatting.GOLD))
+                    .append(Component.literal(player1.getName().getString()).withStyle(ChatFormatting.RED))
+                    .append(Component.literal(".").withStyle(ChatFormatting.GOLD)), false);
+            ctx.getSource().sendSuccess(() -> Component.literal("ECO: ").withStyle(ChatFormatting.GREEN)
+                    .append(Component.literal("You sent ").withStyle(ChatFormatting.GOLD))
+                    .append(Component.literal("$" + amount).withStyle(ChatFormatting.RED))
+                    .append(Component.literal(" to ").withStyle(ChatFormatting.GOLD))
+                    .append(Component.literal(player.getName().getString()).withStyle(ChatFormatting.RED))
+                    .append(Component.literal(".").withStyle(ChatFormatting.GOLD)), false);
+        } else ctx.getSource().sendSuccess(() -> Component.literal("ERR: Transaction failed.").withStyle(ChatFormatting.DARK_RED), false);
         return 1;
     }
 }
